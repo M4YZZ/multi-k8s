@@ -1,0 +1,26 @@
+language: generic 
+sudo: required
+services:
+   - docker
+
+before_install: #pre-requisite
+  - docker build -t mary007/react-test -f ./client/Dockerfile.dev ./client
+
+#for testing purpose
+script:
+  - docker run -e CI=true mary007/react-test npm run test -- --coverage
+
+after_success:
+  - docker build -t mary007/multi-client ./client
+  - docker build -t mary007/multi-nginx ./nginx
+  - docker build -t mary007/multi-server ./server
+  - docker build -t mary007/multi-worker ./worker
+
+#Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+#Take those images and push it to docker hub
+  - docker push mary007/multi-client
+  - docker push mary007/multi-nginx
+  - docker push mary007/multi-server
+  - docker push mary007/multi-worker
